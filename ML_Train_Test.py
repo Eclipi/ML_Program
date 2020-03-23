@@ -27,7 +27,8 @@ class MyWindow(QWidget):
         self.ui.pushbtn_adjust_roi.clicked.connect(self.roiAdjust)
         # self.ui.lineEdit_x_min.textChanged.connect(self.setCoordinate)
 
-
+        self.th = Worker(parent=self)
+        self.th2 = Worker(parent=self)
 
         self.cpt = cv2.VideoCapture(0)
         self.fps = 30
@@ -39,15 +40,13 @@ class MyWindow(QWidget):
 
 
 
-    def run(self):
+    def start(self):
+        self.th.start()
+        self.th.working = True
+
         self.timer = QTimer()
         self.timer.timeout.connect(self.nextFrameSlot)
         self.timer.start(1000/self.fps)
-
-    def start(self):
-        th = QtCore.QThread()
-        th.start()
-
         print("Started")
 
     def nextFrameSlot(self):
@@ -62,21 +61,38 @@ class MyWindow(QWidget):
         pix = QPixmap.fromImage(img)
         self.ui.frame.setPixmap(pix)
 
-    # def setCoordinate:
-    #
-
     def roiAdjust(self, img):
-        x_min = self.ui.lineEdit_x_min.text()
-        y_min = self.ui.lineEdit_y_min.text()
-        x_max = self.ui.lineEdit_x_max.text()
-        x_max = self.ui.lineEdit_y_max.text()
+        x_min = int(self.ui.lineEdit_x_min.text())
+        y_min = int(self.ui.lineEdit_y_min.text())
+        x_max = int(self.ui.lineEdit_x_max.text())
+        y_max = int(self.ui.lineEdit_y_max.text())
 
+    #     print(x_min, x_max, y_min, y_max)
+    #
+    #     rec = np.zeros((int(x_max)-int(x_min), int(y_max)-int(y_min)), np.uint8)
+    #     cv2.rectangle(rec, (x_min,y_min), (x_max,y_max), (0,0,255), 1)
+    #
+    #     rec = QImage(rec, int(x_max), int(y_max) , QImage.Format_RGB16)
+    #     pix2 = QPixmap.fromImage(rec)
+    #     self.ui.frame_roi.setPixmap(pix2)
 
+    def displayroi(self):
+        self.th2.start()
+        self.th2.working = True
+        self.timer = QTimer()
+        self.timer.timeout.connect(self.nextFrameSlot_roi)
+        self.timer.start(1000 / self.fps)
+        print("roi display")
 
+    def nextFrameSlot_roi(self, canny):
+        roi_image = canny[self.x_min:self.x_max, self.y_min,self.y_max]
+        pix = QPixmap.fromImage(roi_image)
+        self.ui.frame_roi.setPixmap(pix)
 
     def stop(self):
         # self.ui.frame.setPixmap(QPixmap.fromImage(QImage))
         self.timer.stop()
+        self.th.working = False
         # self.cpt.release()
 
     def compare(self, img_o, img_p):
