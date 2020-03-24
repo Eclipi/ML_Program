@@ -70,7 +70,7 @@ class MyWindow(QWidget):
         myWindow.x_max = int(self.ui.lineEdit_x_max.text())
         myWindow.y_max = int(self.ui.lineEdit_y_max.text())
 
-#OpenCV로 카메라 불러오기
+#OpenCV로 카메라 불러와서 UI 띄워주기
     def nextFrameSlot(self):
         _, cam = self.cpt.read()
         # cam = cv2.cvtColor(cam, cv2.COLOR_BGR2RGB)
@@ -79,8 +79,8 @@ class MyWindow(QWidget):
         cam2 = cv2.cvtColor(cam, cv2.COLOR_BGR2GRAY)
         canny = cv2.Canny(cam2, self.canny_threshold1,self.canny_threshold2)
 
-        sizedimg = canny[self.x_min:self.x_max, self.y_min:self.y_max]
-        img_2 = qimage2ndarray.array2qimage(sizedimg)
+        MyWindow.sizedimg = canny[self.x_min:self.x_max, self.y_min:self.y_max]
+        img_2 = qimage2ndarray.array2qimage(self.sizedimg)
 
         pix2 = QPixmap.fromImage(img_2)
 
@@ -89,6 +89,8 @@ class MyWindow(QWidget):
         pix = QPixmap.fromImage(img)
         self.ui.frame.setPixmap(pix)
         self.ui.frame_roi.setPixmap(pix2)
+
+
 
 #Canny Threshold값 변경
     def thresholdAdjust(self):
@@ -107,6 +109,7 @@ class MyWindow(QWidget):
         print("Directory is: ", self.fname)
 
     def takingPictures(self):
+        #폴더가 없을시 해당 폴더 생성
         new_folder_directory = self.fname + "/" + self.ui.lineEdit_amount.text()
         new_folder_directory = str(new_folder_directory)
         print(new_folder_directory)
@@ -118,6 +121,14 @@ class MyWindow(QWidget):
 
         directory = self.fname + "/" + self.ui.lineEdit_amount.text()
         print(directory)
+
+        imgnum = 1
+        total_file_num = 0
+        print(len(os.listdir('{}'.format(new_folder_directory))))
+        while (total_file_num < 30):
+            total_file_num = len(os.listdir('{}'.format(new_folder_directory)))
+            cv2.imwrite('{}/{}.png'.format(new_folder_directory, imgnum), self.sizedimg)
+            imgnum += 1
 
 #쓰레드 클레스
 class Worker(QThread):
