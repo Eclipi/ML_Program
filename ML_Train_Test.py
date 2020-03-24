@@ -14,6 +14,9 @@ class MyWindow(QWidget):
     y_max = 425
     canny_threshold1 = 50
     canny_threshold2 = 250
+    picture_taking = False
+    imgnum = 1
+    picture_total_num = 100000
 
     def __init__(self):
         super().__init__()
@@ -72,6 +75,7 @@ class MyWindow(QWidget):
 
 #OpenCV로 카메라 불러와서 UI 띄워주기
     def nextFrameSlot(self):
+
         _, cam = self.cpt.read()
         # cam = cv2.cvtColor(cam, cv2.COLOR_BGR2RGB)
         # cam = cv2.flip(cam, 1)
@@ -82,6 +86,27 @@ class MyWindow(QWidget):
         MyWindow.sizedimg = canny[self.x_min:self.x_max, self.y_min:self.y_max]
         img_2 = qimage2ndarray.array2qimage(self.sizedimg)
 
+        if self.picture_taking == True:
+            new_folder_directory = self.fname + "/" + self.ui.lineEdit_amount.text()
+            new_folder_directory = str(new_folder_directory)
+            print(new_folder_directory)
+            try:
+                if not os.path.exists(new_folder_directory):
+                    os.makedirs(new_folder_directory)
+            except OSError:
+                print("Failed to create directory!" + new_folder_directory)
+
+            directory = self.fname + "/" + self.ui.lineEdit_amount.text()
+            print(directory)
+
+            print(len(os.listdir('{}'.format(new_folder_directory))))
+            cv2.imwrite('{}/{}.png'.format(new_folder_directory, self.imgnum), self.sizedimg)
+            self.imgnum += 1
+            print(self.imgnum)
+
+        if self.imgnum == (self.picture_total_num + 1):
+            self.picture_taking = False
+
         pix2 = QPixmap.fromImage(img_2)
 
         img = QImage(canny, cam.shape[1], cam.shape[0], QImage.Format_Grayscale8)
@@ -89,8 +114,6 @@ class MyWindow(QWidget):
         pix = QPixmap.fromImage(img)
         self.ui.frame.setPixmap(pix)
         self.ui.frame_roi.setPixmap(pix2)
-
-
 
 #Canny Threshold값 변경
     def thresholdAdjust(self):
@@ -109,26 +132,28 @@ class MyWindow(QWidget):
         print("Directory is: ", self.fname)
 
     def takingPictures(self):
+        MyWindow.picture_taking = True
+        MyWindow.picture_total_num = int(self.ui.lineEdit_num_pics.text())
         #폴더가 없을시 해당 폴더 생성
-        new_folder_directory = self.fname + "/" + self.ui.lineEdit_amount.text()
-        new_folder_directory = str(new_folder_directory)
-        print(new_folder_directory)
-        try:
-            if not os.path.exists(new_folder_directory):
-                os.makedirs(new_folder_directory)
-        except OSError:
-            print("Failed to create directory!" + new_folder_directory)
-
-        directory = self.fname + "/" + self.ui.lineEdit_amount.text()
-        print(directory)
-
-        imgnum = 1
-        total_file_num = 0
-        print(len(os.listdir('{}'.format(new_folder_directory))))
-        while (total_file_num < 30):
-            total_file_num = len(os.listdir('{}'.format(new_folder_directory)))
-            cv2.imwrite('{}/{}.png'.format(new_folder_directory, imgnum), self.sizedimg)
-            imgnum += 1
+        # new_folder_directory = self.fname + "/" + self.ui.lineEdit_amount.text()
+        # new_folder_directory = str(new_folder_directory)
+        # print(new_folder_directory)
+        # try:
+        #     if not os.path.exists(new_folder_directory):
+        #         os.makedirs(new_folder_directory)
+        # except OSError:
+        #     print("Failed to create directory!" + new_folder_directory)
+        #
+        # directory = self.fname + "/" + self.ui.lineEdit_amount.text()
+        # print(directory)
+        #
+        # imgnum = 1
+        # total_file_num = 0
+        # print(len(os.listdir('{}'.format(new_folder_directory))))
+        # while (total_file_num < 30):
+        #     total_file_num = len(os.listdir('{}'.format(new_folder_directory)))
+        #     cv2.imwrite('{}/{}.png'.format(new_folder_directory, imgnum), self.sizedimg)
+        #     imgnum += 1
 
 #쓰레드 클레스
 class Worker(QThread):
