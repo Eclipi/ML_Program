@@ -192,7 +192,7 @@ class MyWindow(QWidget):
         worker_2.signals.result.connect(self.print_output)
         worker_2.signals.finished.connect(self.thread_complete)
         worker_2.signals.progress.connect(self.progress_fn)
-
+        self.roiAdjust()
         # Execute
         self.threadpool.start(worker_2)
         self.timer.timeout.connect(self.nextFrameSlot_roi)
@@ -202,7 +202,7 @@ class MyWindow(QWidget):
         # self.th2.start()
         # self.th2.working = True
         self.timer = QTimer()
-        self.timer.timeout.connect(self.nextFrameSlot_roi(MyWindow.canny))
+        self.timer.timeout.connect(self.nextFrameSlot_roi())
         self.timer.start(1000 / self.fps)
         print("roi display")
 
@@ -211,7 +211,6 @@ class MyWindow(QWidget):
         # cam = cv2.cvtColor(cam, cv2.COLOR_BGR2RGB)
         # cam = cv2.flip(cam, 1)
 
-        self.roiAdjust()
         canny = MyWindow.canny
         sizedimg = canny[self.x_min:self.x_max, self.y_min:self.y_max]
         img_2 = qimage2ndarray.array2qimage(sizedimg)
